@@ -162,7 +162,69 @@
 
 @end
 
-@implementation MAMutableDictionary
+@implementation MAMutableDictionary {
+    NSUInteger _size;
+    MAFixedMutableDictionary *_fixedDict;
+}
+
+static const NSUInteger kMaxLoadFactorNumerator = 7;
+static const NSUInteger kMaxLoadFactorDenominator = 10;
+
+- (id)initWithCapacity: (NSUInteger)capacity
+{
+    capacity = MAX(capacity, 4);
+    if((self = [super init]))
+    {
+        _size = capacity;
+        _fixedDict = [[MAFixedMutableDictionary alloc] initWithSize: _size];
+    }
+    return self;
+}
+
+- (void)dealloc
+{
+    [_fixedDict release];
+    [super dealloc];
+}
+
+- (NSUInteger)count
+{
+    return [_fixedDict count];
+}
+
+- (id)objectForKey: (id)key
+{
+    return [_fixedDict objectForKey: key];
+}
+
+- (NSEnumerator *)keyEnumerator
+{
+    return [_fixedDict keyEnumerator];
+}
+
+- (void)removeObjectForKey: (id)key
+{
+    [_fixedDict removeObjectForKey: key];
+}
+
+- (void)setObject: (id)obj forKey:(id)key
+{
+    [_fixedDict setObject: obj forKey: key];
+    
+    if(kMaxLoadFactorDenominator * [_fixedDict count] / _size > kMaxLoadFactorNumerator)
+    {
+        NSUInteger newSize = _size * 2;
+        MAFixedMutableDictionary *newDict = [[MAFixedMutableDictionary alloc] initWithSize: newSize];
+        
+        for(id key in _fixedDict)
+            [newDict setObject: [_fixedDict objectForKey: key] forKey: key];
+        
+        [_fixedDict release];
+        _size = newSize;
+        _fixedDict = newDict;
+    }
+}
+
 @end
 
 static void Test(NSMutableDictionary *testDictionary)
