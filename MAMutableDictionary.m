@@ -2,7 +2,7 @@
 #import "MAMutableDictionary.h"
 
 @interface _MAMutableDictionaryBucket : NSObject
-@property (nonatomic, retain) id key;
+@property (nonatomic, copy) id key;
 @property (nonatomic, retain) id obj;
 @property (nonatomic, retain) _MAMutableDictionaryBucket *next;
 @end
