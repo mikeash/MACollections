@@ -119,7 +119,7 @@ void MAMutableArrayTest(void)
     
     for(int i = 0; i < 100000; i++)
     {
-        NSUInteger index = nrand48(seed.v) % sizeof(blocks) / sizeof(*blocks);
+        NSUInteger index = nrand48(seed.v) % (sizeof(blocks) / sizeof(*blocks));
         void (^block)(void) = blocks[index];
         [operations addObject: [NSNumber numberWithInteger: index]];
         
