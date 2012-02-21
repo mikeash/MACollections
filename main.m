@@ -1,4 +1,4 @@
-// xcrun clang -fobjc-arc -framework Foundation main.m MAMutableArray.m
+// xcrun clang -framework Foundation main.m MAMutableArray.m
 #import <Foundation/Foundation.h>
 #import "MAMutableArray.h"
 
