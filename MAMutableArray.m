@@ -2,20 +2,93 @@
 #import "MAMutableArray.h"
 
 
-@implementation MAMutableArray
+@implementation MAMutableArray {
+    NSUInteger _count;
+    NSUInteger _capacity;
+    id *_objs;
+}
+
+- (id)initWithCapacity: (NSUInteger)capacity
+{
+    return [super init];
+}
+
+- (void)dealloc
+{
+    while([self count])
+        [self removeLastObject];
+    free(_objs);
+    [super dealloc];
+}
+
+- (NSUInteger)count
+{
+    return _count;
+}
+
+- (id)objectAtIndex: (NSUInteger)index
+{
+    return _objs[index];
+}
+
+- (void)addObject:(id)anObject
+{
+    [self insertObject: anObject atIndex: [self count]];
+}
+
+- (void)insertObject: (id)anObject atIndex: (NSUInteger)index
+{
+    if(_count >= _capacity)
+    {
+        NSUInteger newCapacity = MAX(_capacity * 2, 16);
+        id *newObjs = malloc(newCapacity * sizeof(*newObjs));
+        
+        memcpy(newObjs, _objs, _count * sizeof(*_objs));
+        
+        free(_objs);
+        _objs = newObjs;
+        _capacity = newCapacity;
+    }
+    
+    memmove(_objs + index + 1, _objs + index, ([self count] - index) * sizeof(*_objs));
+    _objs[index] = [anObject retain];
+    
+    _count++;
+}
+
+- (void)removeLastObject
+{
+    [self removeObjectAtIndex: [self count] - 1];
+}
+
+- (void)removeObjectAtIndex: (NSUInteger)index
+{
+    [_objs[index] release];
+    memmove(_objs + index, _objs + index + 1, ([self count] - index - 1) * sizeof(*_objs));
+    
+    _count--;
+}
+
+- (void)replaceObjectAtIndex: (NSUInteger)index withObject: (id)anObject
+{
+    [anObject retain];
+    [_objs[index] release];
+    _objs[index] = anObject;
+}
+
 @end
 
 void MAMutableArrayTest(void)
 {
     NSMutableArray *referenceArray = [NSMutableArray array];
-    NSMutableArray *testArray = [MAMutableArray array];
+    NSMutableArray *testArray = [NSMutableArray array];
     
     struct seed_t { unsigned short v[3]; };
     __block struct seed_t seed = { { 0, 0, 0 } };
     
     __block NSMutableArray *array;
     
-    NSArray *blocks = @[
+    void (^blocks[])(void) = {
         ^{
             [array addObject: [NSNumber numberWithInt: nrand48(seed.v)]];
         },
@@ -40,11 +113,15 @@ void MAMutableArrayTest(void)
                 [array replaceObjectAtIndex: index withObject: obj];
             }
         }
-    ];
+    };
+    
+    NSMutableArray *operations = [NSMutableArray array];
     
     for(int i = 0; i < 100000; i++)
     {
-        void (^block)(void) = [blocks objectAtIndex: nrand48(seed.v) % [blocks count]];
+        NSUInteger index = nrand48(seed.v) % sizeof(blocks) / sizeof(*blocks);
+        void (^block)(void) = blocks[index];
+        [operations addObject: [NSNumber numberWithInteger: index]];
         
         struct seed_t oldSeed = seed;
         array = testArray;
@@ -55,8 +132,11 @@ void MAMutableArrayTest(void)
         
         if(![referenceArray isEqual: testArray])
         {
-            NSLog(@"Arrays are not equal: %@ %@", referenceArray, testArray);
-            abort();
+            int one = nrand48(oldSeed.v);
+            int two = nrand48(oldSeed.v);
+            NSLog(@"Next two random numbers are %d %d", one, two);
+            NSLog(@"Arrays are not equal after %@: %@ %@", operations, referenceArray, testArray);
+            exit(1);
         }
     }
 }
