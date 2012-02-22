@@ -15,8 +15,7 @@
 
 - (void)dealloc
 {
-    while([self count])
-        [self removeLastObject];
+    [self removeAllObjects];
     free(_objs);
     [super dealloc];
 }
