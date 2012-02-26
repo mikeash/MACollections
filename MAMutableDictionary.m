@@ -140,20 +140,13 @@
 
 - (void)setObject: (id)obj forKey: (id)key
 {
-    NSUInteger bucketIndex = [key hash] % _size;
-    _MAMutableDictionaryBucket *bucket = _array[bucketIndex];
-    while(bucket)
-    {
-        if([[bucket key] isEqual: key])
-        {
-            [bucket setObj: obj];
-            return;
-        }
-        bucket = [bucket next];
-    }
     _MAMutableDictionaryBucket *newBucket = [[_MAMutableDictionaryBucket alloc] init];
     [newBucket setKey: key];
     [newBucket setObj: obj];
+    
+    [self removeObjectForKey: key];
+
+    NSUInteger bucketIndex = [key hash] % _size;
     [newBucket setNext: _array[bucketIndex]];
     [_array[bucketIndex] release];
     _array[bucketIndex] = newBucket;
