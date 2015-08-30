@@ -80,7 +80,7 @@
 void MAMutableArrayTest(void)
 {
     NSMutableArray *referenceArray = [NSMutableArray array];
-    NSMutableArray *testArray = [NSMutableArray array];
+    MAMutableArray *testArray = [MAMutableArray array];
     
     struct seed_t { unsigned short v[3]; };
     __block struct seed_t seed = { { 0, 0, 0 } };
